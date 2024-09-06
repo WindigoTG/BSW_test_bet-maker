@@ -1,0 +1,41 @@
+services:
+  app:
+    build:
+      context: .
+    env_file:
+      - .env
+    ports:
+      - "8000:8000"
+    depends_on:
+      - postgres
+      - redis
+    links:
+      - postgres
+      - redis
+    restart: unless-stopped
+    command: ["/app/app.sh"]
+
+  postgres:
+    container_name: postgres_bets
+    env_file:
+      - .env
+    environment:
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_NAME}
+    image: postgres
+    ports:
+      - '5430:5432'
+    restart: unless-stopped
+    volumes:
+      - ./db/:/var/lib/postgresql/data
+
+  redis:
+    container_name: redis
+    image: redis:7.2.5-alpine
+    restart: unless-stopped
+    ports:
+      - '6379:6379'
+    volumes:
+      - ./redis:/data
+    command: redis-server --save 60 1 --loglevel warning --requirepass ${REDIS_PASSWORD}
