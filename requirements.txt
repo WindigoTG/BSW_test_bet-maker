@@ -7,3 +7,4 @@ sqlalchemy==2.0.31
 alembic==1.13.2
 asyncpg==0.29.0
 orjson==3.10.7
+redis==5.0.7
