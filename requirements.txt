@@ -1,0 +1,9 @@
+fastapi==0.112.2
+python-dotenv==1.0.1
+gunicorn==23.0.0
+uvicorn==0.30.6
+pydantic-settings==2.4.0
+sqlalchemy==2.0.31
+alembic==1.13.2
+asyncpg==0.29.0
+orjson==3.10.7
