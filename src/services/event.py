@@ -1,4 +1,5 @@
-from typing import List, Optional, TYPE_CHECKING
+import time
+from typing import List, Optional, TYPE_CHECKING, Callable
 
 import aiohttp
 from fastapi import status
@@ -6,11 +7,16 @@ from fastapi import status
 from src.config import settings
 from src.schemas.event import EventSchema
 from src.services.redis import RedisService
+from src.utils.enums import EventState
+from src.utils.unit_of_work import UnitOfWork
+
 if TYPE_CHECKING:
     from src.services.bet import BetService
 
 
 class EventService:
+    on_update_callback: Optional[Callable] = None
+
     @staticmethod
     async def get_active_events() -> List[EventSchema]:
         async with aiohttp.ClientSession() as session:
@@ -54,8 +60,30 @@ class EventService:
 
                 return EventSchema(**event)
 
-    @staticmethod
-    async def update_event_data(event: EventSchema) -> None:
+    @classmethod
+    async def update_event_data(
+        cls,
+        uow: UnitOfWork,
+        event: EventSchema,
+    ) -> None:
         RedisService.add_or_update_in_cache(str(event.id), event)
 
-        #TODO: вызов сервиса ставок для обновления статуса
+        if cls.on_update_callback:
+            await cls.on_update_callback(uow, event.id, event.state)
+
+    @classmethod
+    def register_on_update_callback(cls, callback: Callable) -> None:
+        cls.on_update_callback = callback
+
+    @staticmethod
+    async def check_if_event_valid(event_id: int) -> bool:
+        event = await EventService.get_event_by_id(str(event_id))
+
+        if (
+            not event or
+            int(time.time()) > event.deadline or
+            event.state != EventState.NEW
+        ):
+            return False
+
+        return True

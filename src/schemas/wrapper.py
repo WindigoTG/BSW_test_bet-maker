@@ -15,6 +15,10 @@ class BetListWrapper(BaseWrapper):
     payload: List[BetSchema]
 
 
+class BetWrapper(BaseWrapper):
+    payload: BetSchema
+
+
 class EventListWrapper(BaseWrapper):
     payload: List[EventSchema]
 
