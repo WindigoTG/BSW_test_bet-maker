@@ -8,19 +8,38 @@ from src.utils.unit_of_work import UnitOfWork
 router = APIRouter()
 
 
-@router.get('/', tags=["events"])
+@router.get(
+    '/',
+    summary="Get list of active events.",
+    response_model=EventListWrapper,
+    tags=["events"],
+)
 async def get_events():
+    """Get list of active events."""
     events = await EventService.get_active_events()
     return EventListWrapper(
         payload=events
     )
 
 
-@router.post('/', tags=["events"])
+@router.post(
+    '/',
+    summary="Endpoint for notifications about changes in events.",
+    tags=["events"],
+)
 async def update_event(
     event: EventSchema,
     uow: UnitOfWork = Depends(UnitOfWork),
 ):
+    """
+    Endpoint for notifications about changes in events.
+
+    Body params:
+    - **id**: Id of the event.
+    - **coefficient**: Bet coefficient for the event.
+    - **deadline**: Timestamp of betting dedline.
+    - **state**: State of the event.
+    """
     await EventService.update_event_data(uow, event)
     return
 
